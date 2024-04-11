@@ -1,52 +1,41 @@
-import reactLogo from './assets/react.svg'
+import { useEffect, useState } from 'react';
 import viteLogo from '/vite.svg'
-import { Link } from 'react-router-dom'
+import Cookies from 'js-cookie';
 
-const getOauthGoogleUrl = () => {
-  const { VITE_GOOGLE_CLIENT_ID, VITE_GOOGLE_AUTHORIZED_REDIRECT_URI } =
-    import.meta.env
-  const rootUrl = 'https://accounts.google.com/o/oauth2/v2/auth'
-  const options = {
-    redirect_uri: VITE_GOOGLE_AUTHORIZED_REDIRECT_URI,
-    client_id: VITE_GOOGLE_CLIENT_ID,
-    access_type: 'offline',
-    response_type: 'code',
-    prompt: 'consent',
-    scope: [
-      'https://www.googleapis.com/auth/userinfo.profile',
-      'https://www.googleapis.com/auth/userinfo.email'
-    ].join(' ')
-  }
-  const qs = new URLSearchParams(options)
-  return `${rootUrl}?${qs.toString()}`
-}
 
 function Home() {
-  const isAuthenticated = Boolean(localStorage.getItem('access_token'))
-  const logout = () => {
-    localStorage.removeItem('access_token')
-    localStorage.removeItem('refresh_token')
-    window.location.reload()
-  }
+ const [profile, setProfile] = useState(null);
+
+  useEffect(() => {
+    const profileCookie = Cookies.get('profile');
+    if (profileCookie) {
+      console.log(JSON.parse(profileCookie));
+      setProfile(JSON.parse(profileCookie));
+    }
+  }, []);
+
    const handleLoginWithFacebook = () => {
     window.location.href = 'http://localhost:4000/auth/facebook';
   }
-   
+   const handleLogout = ()=> {
+    Cookies.remove('profile');
+    window.location.href = '/';
+   }
 
   return (
     <>
       <div>
+      <h2>OAuth with Facebook</h2>
         <div>
           <img src={viteLogo} className='logo' alt='Vite logo' />
+          
         </div>
-      
       </div>
-      <h1>OAuth Facebook</h1>
       <div>
-        {isAuthenticated ? (
+        {profile ? (
           <div>
-            <p>Xin chào, bạn đã login thành công</p>
-            <button onClick={logout}>Click để logout</button>
+            <p>Xin chào, {profile.displayName}</p>
+            <button onClick={handleLogout}>Logout</button>
           </div>
         ) : (
           <button onClick={handleLoginWithFacebook}>Login with Facebook</button>

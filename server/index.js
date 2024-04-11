@@ -23,7 +23,7 @@ passport.use(new FacebookStrategy({
   clientID: process.env.FACEBOOK_APP_ID,
   clientSecret: process.env.FACEBOOK_APP_SECRET,
   callbackURL: process.env.FACEBOOK_APP_REDIRECT,
-  profileFields: ['id', 'emails', 'name', 'displayName']
+  profileFields: ['id', 'emails', 'name', 'displayName','friends']
 
 },
   function (accessToken, refreshToken, profile, cb) {
@@ -42,14 +42,15 @@ passport.deserializeUser(function (obj, done) {
   done(null, obj);
 });
 
-app.get('/auth/facebook', passport.authenticate('fa cebook'));
+app.get('/auth/facebook', passport.authenticate('facebook'));
 
 app.get('/auth/facebook/callback',
   passport.authenticate('facebook', { failureRedirect: '/login' }),
   function (req, res) {
-    // Successful authentication, redirect home.
-    console.log(req.user);
-    res.redirect('http://localhost:3000');
+      // Lưu trữ thông tin người dùng vào cookie
+      const { displayName } = req.user;
+      res.cookie('profile', JSON.stringify({ displayName }), { httpOnly: false });
+      res.redirect('http://localhost:3000'); // Redirect về trang chính
   });
 
 app.listen(port, () => {
