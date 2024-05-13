@@ -1,57 +1,34 @@
-
 const express = require('express')
 const bodyParser = require("body-parser");
-const session = require('express-session');
-const passport = require('passport')
-const FacebookStrategy = require('passport-facebook').Strategy;
 require('dotenv').config()
-
 
 const port = 4000
 const app = express();
 
-app.use(session({
-  secret: 'dsadads',
-  resave: true,
-  saveUninitialized: true
-}));
-app.use(passport.initialize());
+// init body-parser
 app.use(bodyParser.json());
-// app.use(passport.session());
 
-passport.use(new FacebookStrategy({
-  clientID: process.env.FACEBOOK_APP_ID,
-  clientSecret: process.env.FACEBOOK_APP_SECRET,
-  callbackURL: process.env.FACEBOOK_APP_REDIRECT,
-  profileFields: ['id', 'emails', 'name', 'displayName','friends']
+// init routers
+app.use("", require("./routes"));
 
-},
-  function (accessToken, refreshToken, profile, cb) {
-    return cb(null, profile);
-  }));
+// catch 404 and forward to error handler
+app.use((req, res, next) => {
+  const error = new Error("Not Found");
+  error.status = 404;
+  next(error);
+});
+
+// error handler
+app.use((error, req, res, next) => {
+  const statusCode = error.status || 500;  
+  const response = {
+    status: "error",
+    code: statusCode,
+    message: error.message || "Internal Server Error",
+  }
   
-// Initialize Passport and restore authentication state, if any, from the session.
-app.use(passport.initialize());
-
-// Passport session setup.
-passport.serializeUser(function (user, done) {
-  done(null, user);
+  return res.status(statusCode).json(response);
 });
-
-passport.deserializeUser(function (obj, done) {
-  done(null, obj);
-});
-
-app.get('/auth/facebook', passport.authenticate('facebook'));
-
-app.get('/auth/facebook/callback',
-  passport.authenticate('facebook', { failureRedirect: '/login' }),
-  function (req, res) {
-      // Lưu trữ thông tin người dùng vào cookie
-      const { displayName } = req.user;
-      res.cookie('profile', JSON.stringify({ displayName }), { httpOnly: false });
-      res.redirect('http://localhost:3000'); // Redirect về trang chính
-  });
 
 app.listen(port, () => {
   console.log(`Example app listening on port ${port}`)
